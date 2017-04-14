@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+    <TextView
+        android:text="TextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/current_file_dir"
+        android:textStyle="bold"
+         />
+    <Button
+        android:text="确认"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/ft_file_confirm"
+        />
+    <Button
+        android:text="上级"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/ft_file_up"
+        />
+    <ListView android:id="@android:id/list" android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+
+</LinearLayout>
