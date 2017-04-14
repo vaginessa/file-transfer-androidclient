@@ -111,7 +111,7 @@ public class FtActivity extends AppCompatActivity  {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_SETTINGS_ACTIVITY  ) {
             if(resultCode==RESULT_OK){
-                attemptLogin();
+               // attemptLogin();
             }else if(resultCode==RESULT_CANCELED){
                 showTxt("取消");
             }

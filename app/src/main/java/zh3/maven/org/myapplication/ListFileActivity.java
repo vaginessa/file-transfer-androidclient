@@ -117,7 +117,7 @@ public class ListFileActivity extends ListActivity {
         if (list != null) {
             List<String> values=new ArrayList<String>(list.length);
             for (File file : list) {
-                if (!file.getName().startsWith(".")&&file.isDirectory()) {
+                if (!file.getName().startsWith(".")&&file.isDirectory()&&file.canRead()) {
                     values.add(file.getName());
                 }
             }
