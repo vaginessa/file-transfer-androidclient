@@ -16,12 +16,37 @@
         android:layout_height="wrap_content"
         android:id="@+id/ft_file_confirm"
         />
-    <Button
-        android:text="上级"
+
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/ft_file_up"
-        />
+
+        >
+
+        <Button
+            android:text="内部存储"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/ft_storage_inner"
+            />
+        <Button
+            android:text="存储卡"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/ft_storage_sd"
+            />
+        <Button
+            android:text="上级"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/ft_file_up"
+            />
+    </LinearLayout>
+
+
+
+
     <ListView android:id="@android:id/list" android:layout_width="match_parent"
         android:layout_height="wrap_content"
         />

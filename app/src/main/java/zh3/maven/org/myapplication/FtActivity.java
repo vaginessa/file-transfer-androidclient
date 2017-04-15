@@ -6,6 +6,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 
 import android.net.Uri;
@@ -244,7 +245,7 @@ public class FtActivity extends AppCompatActivity  {
             LogUtils logUtils=new LogUtils(logFile,adapter);
             Config config;
             try {
-                SharedPreferences sp=getSharedPreferences(FtSetActivity.SETTING_FILE, Context.MODE_PRIVATE);
+                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(FtActivity.this);
                 config = new Config(sp);
             } catch (IOException e2) {
                 e2.printStackTrace();

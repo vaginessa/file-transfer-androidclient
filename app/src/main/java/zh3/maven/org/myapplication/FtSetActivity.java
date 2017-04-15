@@ -16,9 +16,12 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
+import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -45,7 +48,7 @@ import static android.Manifest.permission.READ_CONTACTS;
 public class FtSetActivity   extends AppCompatActivity{
     private static final String TAG="FtSetActivity";
     private static final int REQUEST_CODE_FILE_EXPLORER_ACTIVITY=204;
-    public static final String SETTING_FILE= "ft_setting";
+   // public static final String SETTING_FILE= "ft_setting";
     private SettingsFragment sf;
 
     @Override
@@ -58,13 +61,15 @@ public class FtSetActivity   extends AppCompatActivity{
                 .commit();
     }
 
-    public static class SettingsFragment extends PreferenceFragment {
+
+
+    public static class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
         private Preference button;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            getPreferenceManager().setSharedPreferencesName(SETTING_FILE);
+           // getPreferenceManager().setSharedPreferencesName(SETTING_FILE);
             addPreferencesFromResource(R.xml.ft_pref_set);
             button = findPreference("src_dir_text");
             button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -73,16 +78,49 @@ public class FtSetActivity   extends AppCompatActivity{
                     Intent intent = new Intent(SettingsFragment.this.getContext(),
                             ListFileActivity.class);
                     Bundle bundle=new Bundle();
-                    SharedPreferences sp=getActivity().getSharedPreferences(FtSetActivity.SETTING_FILE, Context.MODE_PRIVATE);
-                    String srcDir = sp.getString("src_dir_text", "/");
+                    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(SettingsFragment.this.getContext());
+                    String srcDir = sharedPref.getString("src_dir_text", "/");
                     bundle.putString("path", srcDir);
                     intent.putExtras(bundle);
                     getActivity().startActivityForResult(intent, REQUEST_CODE_FILE_EXPLORER_ACTIVITY);
                     return true;
                 }
             });
+           SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(SettingsFragment.this.getContext());
+
+
+            Preference ipPref = findPreference("conn_ip_text");
+            ipPref.setSummary(sharedPref.getString("conn_ip_text","192.168.1.101"));
+            Preference portPref = findPreference("conn_port_text");
+            portPref.setSummary(sharedPref.getString("conn_port_text","20009")+"");
+
+        }
+        @Override
+        public void onResume() {
+            super.onResume();
+            getPreferenceScreen().getSharedPreferences()
+                    .registerOnSharedPreferenceChangeListener(this);
         }
 
+        @Override
+        public void onPause() {
+            super.onPause();
+            getPreferenceScreen().getSharedPreferences()
+                    .unregisterOnSharedPreferenceChangeListener(this);
+        }
+
+        @Override
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            Preference p = findPreference(key);
+            if(p instanceof EditTextPreference){
+                p.setSummary(sharedPreferences.getString(key,""));
+            } else  if(p instanceof CheckBoxPreference){
+              //  p.setSummary(sharedPreferences.getString(key,""));
+            }else {
+                p.setSummary(sharedPreferences.getString(key,""));
+            }
+
+        }
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
