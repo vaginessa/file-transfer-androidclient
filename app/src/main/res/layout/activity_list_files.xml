@@ -25,10 +25,10 @@
         >
 
         <Button
-            android:text="内部存储"
+            android:text="图片"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/ft_storage_inner"
+            android:id="@+id/ft_storage_pic"
             />
         <Button
             android:text="存储卡"
@@ -37,10 +37,11 @@
             android:id="@+id/ft_storage_sd"
             />
         <Button
-            android:text="上级"
+            android:text="上级目录"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/ft_file_up"
+            android:layout_gravity="right"
             />
     </LinearLayout>
 

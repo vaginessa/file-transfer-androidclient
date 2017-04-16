@@ -10,27 +10,8 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="zh3.maven.org.myapplication.FtActivity">
     <!-- Login progress -->
-    <ProgressBar
-        android:id="@+id/login_progress"
-        style="?android:attr/progressBarStyleLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:visibility="gone" />
-
-    <ScrollView
-        android:id="@+id/login_form"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <LinearLayout
-            android:id="@+id/email_login_form"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-            <ListView android:id="@+id/logList" android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+            <ListView android:id="@+id/logList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 />
-        </LinearLayout>
-    </ScrollView>
 </LinearLayout>

@@ -16,6 +16,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
@@ -87,14 +88,19 @@ public class FtSetActivity   extends AppCompatActivity{
                 }
             });
            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(SettingsFragment.this.getContext());
-
+            Preference srcPref = findPreference("src_dir_text");
+            srcPref.setSummary(sharedPref.getString("src_dir_text","/"));
 
             Preference ipPref = findPreference("conn_ip_text");
             ipPref.setSummary(sharedPref.getString("conn_ip_text","192.168.1.101"));
             Preference portPref = findPreference("conn_port_text");
             portPref.setSummary(sharedPref.getString("conn_port_text","20009")+"");
 
+
         }
+
+
+
         @Override
         public void onResume() {
             super.onResume();
@@ -165,7 +171,7 @@ public class FtSetActivity   extends AppCompatActivity{
         String srcDir = sp.getString("src_dir_text", "/");
         boolean delAfterSuccess = sp.getBoolean("def_success_switch", true);
         String ip = sp.getString("conn_ip_text", "192.168.0.10");
-        int port = sp.getInt("conn_port_text", 20009);
+        int port =Integer.parseInt( sp.getString("conn_port_text", "20009"));
 
         this.setResult(RESULT_OK);
         this.finish();

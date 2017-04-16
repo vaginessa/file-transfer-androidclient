@@ -16,8 +16,18 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
-    <style name="Theme.FloatActivity" parent="android:style/Theme.Dialog">
-        <!-- float_box为我们定义的窗口背景 -->
-        <!--  <item name="android:windowBackground">@drawable/float_box</item>-->
+    <style name="AppBaseTheme" parent="@style/Theme.AppCompat.Light">
+        <!-- API 14 theme customizations can go here. -->
     </style>
+
+    <style name="Theme.FloatActivity" parent="AppBaseTheme">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowSoftInputMode">stateAlwaysHidden</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
+    <!--<style name="Theme.FloatActivity" parent="android:style/Theme.Dialog">
+        &lt;!&ndash;  <item name="android:windowBackground">@drawable/float_box</item>&ndash;&gt;
+    </style>-->
 </resources>

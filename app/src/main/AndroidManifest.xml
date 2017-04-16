@@ -3,6 +3,8 @@
     package="zh3.maven.org.myapplication">
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
     <!-- To auto-complete the email text field in the login form with the user's emails -->
     <application
         android:allowBackup="true"
@@ -28,10 +30,6 @@
             android:name=".FtSetActivity"
             android:label="@string/title_activity_settings">
         </activity>
-        <activity
-            android:name=".FeedbackActivity"
-            android:label="@string/title_activity_feedback"></activity><!-- ATTENTION: This was auto-generated to add Google Play services to your project for
-     App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information. -->
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />

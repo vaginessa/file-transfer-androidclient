@@ -1,20 +1,12 @@
 package zh3.maven.org.myapplication;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
-
 import android.net.Uri;
 import android.os.AsyncTask;
-
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
+import android.preference.PreferenceManager;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,8 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedList;
 
 import zh.Config;
 import zh.Connection;
@@ -60,13 +51,9 @@ public class FtActivity extends AppCompatActivity  {
      */
     private FileTransferTask mFileTask = null;
 
-    // UI references.
-    private AutoCompleteTextView mEmailView;
-    private EditText mPasswordView;
-    private View mProgressView;
-    private View mLoginFormView;
     private ArrayAdapter adapter;
     private File cacheDir;
+    private LinkedList logModel;
 
 
     @Override
@@ -112,17 +99,23 @@ public class FtActivity extends AppCompatActivity  {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_SETTINGS_ACTIVITY  ) {
             if(resultCode==RESULT_OK){
-               // attemptLogin();
+               attemptLogin();
             }else if(resultCode==RESULT_CANCELED){
                 showTxt("取消");
             }
         }
     }
 
-
+    private LogUtils logUtils;
 
     private void showTxt(String txt) {
         Toast.makeText(this, txt, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        logUtils.close();
     }
 
     @Override
@@ -130,12 +123,27 @@ public class FtActivity extends AppCompatActivity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ft);
         ListView logList= (ListView) this.findViewById(R.id.logList);
+
+
+
+
+        logModel=new LinkedList();
         cacheDir=getCacheDir();
         adapter   = new ArrayAdapter(this,
-                android.R.layout.simple_list_item_2, android.R.id.text1, new ArrayList<>());
+                android.R.layout.simple_list_item_2, android.R.id.text1,logModel);
         logList.setAdapter(adapter);
-        
-        
+
+
+        File logFile = null;
+        try {
+            logFile = File.createTempFile("log", ".inf", cacheDir);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("读取配置失败"+e.getMessage());
+        }
+        logUtils=new LogUtils(logFile,adapter,logModel,FtActivity.this);
+
+
     }
 
 
@@ -155,7 +163,6 @@ public class FtActivity extends AppCompatActivity  {
 
         boolean cancel = false;
         View focusView = null;
-        showProgress(true);
         mFileTask = new FileTransferTask();
         mFileTask.execute((Void) null);
         
@@ -163,106 +170,51 @@ public class FtActivity extends AppCompatActivity  {
 
     
 
-    /**
-     * Shows the progress UI and hides the login form.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-    private void showProgress(final boolean show) {
-        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
-        // for very easy animations. If available, use these APIs to fade-in
-        // the progress spinner.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mLoginFormView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-                }
-            });
-
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mProgressView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            });
-        } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
-    }
-
-
-    private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
-        //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<>(FtActivity.this,
-                        android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
-
-        mEmailView.setAdapter(adapter);
-    }
-
-
-    private interface ProfileQuery {
-        String[] PROJECTION = {
-                ContactsContract.CommonDataKinds.Email.ADDRESS,
-                ContactsContract.CommonDataKinds.Email.IS_PRIMARY,
-        };
-
-        int ADDRESS = 0;
-        int IS_PRIMARY = 1;
-    }
 
     /**
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
      */
-    public class FileTransferTask extends AsyncTask<Void, Void, Boolean> {
+    public class FileTransferTask extends AsyncTask<Void, String, Boolean> {
+
+
 
         FileTransferTask() {
 
         }
+        @Override
+        protected void onPreExecute(){
+                 adapter.clear();
+
+
+        }
+
         private static final String logFile="logSend.txt";
         @Override
         protected Boolean doInBackground(Void... params) {
-            adapter.clear();
-            adapter.notifyDataSetChanged();
+
             //客户端请求与本机在20006端口建立TCP连接
-            File logFile = null;
-            try {
-                logFile = File.createTempFile("log", ".inf", cacheDir);
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new RuntimeException("读取配置失败"+e.getMessage());
-            }
-            LogUtils logUtils=new LogUtils(logFile,adapter);
             Config config;
             try {
                 SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(FtActivity.this);
                 config = new Config(sp);
             } catch (IOException e2) {
                 e2.printStackTrace();
-                logUtils.log("读取配置失败");
+                publishProgress("读取配置失败");
                 return false;
             }
             String srcDir=config.getSrcDir();
             File fileSrc = new File(srcDir);
             if(!fileSrc.exists()){
-                logUtils.log(fileSrc.getAbsolutePath()+" 文件目录不存在，请选择要转移的目录！");
+                publishProgress(fileSrc.getAbsolutePath()+" 文件目录不存在，请选择要转移的目录！");
                 return false;
             }
             if(!fileSrc.isDirectory()){
-                logUtils.log(fileSrc.getAbsolutePath()+" 不是目录，请选择要转移的目录！");
+                publishProgress(fileSrc.getAbsolutePath()+" 不是目录，请选择要转移的目录！");
                 return false;
             }
-            logUtils.log("转移目录 "+fileSrc.getAbsolutePath());
+            publishProgress("转移目录 "+fileSrc.getAbsolutePath());
 
             String ip=config.getIp();
             int port=config.getPort();
@@ -279,31 +231,28 @@ public class FtActivity extends AppCompatActivity  {
                 int totalSend=0;
                 for(File file:src.listFiles()){
                     if(!file.isFile()){
-                        logUtils.log("skip not  file "+file.getAbsolutePath());
+                        publishProgress("skip not  file "+file.getAbsolutePath());
                         continue;
                     }
                     FileItem fileItem=new FileItem();
                     fileItem.setName(file.getName());
                     fileItem.setPath(file.getAbsolutePath());
                     fileItem.setSize(file.length());
-                    logUtils.log("发送文件 "+file.getName());
+                    publishProgress("发送文件 "+file.getName());
                     transfer.clientSend(fileItem, connection);
                     totalSend++;
                 }
                 transfer.exitFile(connection);
-                logUtils.log("共发送"+totalSend+"个文件");
-                logUtils.log("退出执行");
-                logUtils.close();
+                publishProgress("共发送"+totalSend+"个文件");
+                publishProgress("退出执行");
+
                 return true;
             }  catch (Exception e1) {
                 e1.printStackTrace();
-                logUtils.log("出现错误："+e1.getMessage());
+                publishProgress("出现错误："+e1.getMessage());
             }  finally {
                 if(connection!=null){
                     connection.close();
-                }
-                if(logUtils!=null){
-                    logUtils.close();
                 }
                 if (client != null) {
                     try {
@@ -322,21 +271,30 @@ public class FtActivity extends AppCompatActivity  {
         @Override
         protected void onPostExecute(final Boolean success) {
             mFileTask = null;
-            showProgress(false);
-
             if (success) {
-                finish();
+                logUtils.log("成功处理全部文件");
             } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
+                logUtils.log("失败");
             }
+        }
+        protected void onProgressUpdate(String...  progress) {
+            logMessage(progress[0]);
         }
 
         @Override
         protected void onCancelled() {
             mFileTask = null;
-            showProgress(false);
+
         }
+    }
+
+    private void logMessage(String progres) {
+     String log=   logUtils.log(progres);
+        if(logModel.size()>200){
+            logModel.removeFirst();
+        }
+        logModel.add(log);
+        adapter.notifyDataSetChanged();
     }
 }
 
