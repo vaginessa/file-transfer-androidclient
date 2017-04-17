@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">文件安全批量转移</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
@@ -17,7 +17,7 @@
 
     <string name="ft_start">开始</string>
     <string name="ft_confirm">确认</string>
-    <string name="ft_faq">FAQ</string>
+    <string name="ft_faq">帮助</string>
     <string name="ft_feedback">反馈</string>
     <string name="ft_file_explorer">文件目录浏览</string>
     <string name="title_activity_settings">Settings</string>

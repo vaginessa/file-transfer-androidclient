@@ -2,6 +2,7 @@ package zh3.maven.org.myapplication;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -24,7 +25,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.text.DecimalFormat;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -53,7 +56,7 @@ public class FtActivity extends AppCompatActivity  {
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
-    private FileTransferTask mFileTask = null;
+    private volatile FileTransferTask mFileTask = null;
 
     private ArrayAdapter adapter;
     private File cacheDir;
@@ -68,7 +71,15 @@ public class FtActivity extends AppCompatActivity  {
         getMenuInflater().inflate(R.menu.menu, menu);
         return true;
     }
-
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        if (mFileTask!=null&&!mFileTask.RUN) {
+            menu.findItem(R.id.ft_start).setTitle("停止" );
+        }else{
+            menu.findItem(R.id.ft_start).setTitle("开始" );
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -134,7 +145,6 @@ public class FtActivity extends AppCompatActivity  {
 
 
 
-
         logModel=new LinkedList();
         cacheDir=getCacheDir();
         adapter   = new ArrayAdapter(this,
@@ -180,7 +190,9 @@ public class FtActivity extends AppCompatActivity  {
         View focusView = null;
         mFileTask = new FileTransferTask();
         mFileTask.execute((Void) null);
-        
+
+        invalidateOptionsMenu();
+
     }
 
     
@@ -206,7 +218,8 @@ public class FtActivity extends AppCompatActivity  {
                  adapter.clear();
                  progressBar.setVisibility(View.VISIBLE);
                  progressBar.setMax(100);
-
+                 RUN=true;
+               invalidateOptionsMenu();
         }
         private FileProgress log(String txt){
             fp.txt=txt;
@@ -214,7 +227,6 @@ public class FtActivity extends AppCompatActivity  {
         }
 
 
-        private static final String logFile="logSend.txt";
         @Override
         protected Boolean doInBackground(Void... params) {
 
@@ -252,6 +264,7 @@ public class FtActivity extends AppCompatActivity  {
                     }
                 }
             }
+            RUN=false;
             return true;
         }
 
@@ -271,8 +284,11 @@ public class FtActivity extends AppCompatActivity  {
             int port=config.getPort();
 
             try {
-                client = new Socket(ip, port);
+                publishProgress(log("尝试连接 "+ip+" ......"+timeoutTry));
+                client = new Socket();
+                client.connect(new InetSocketAddress(ip, port), 5*1000);
                 client.setSoTimeout(15000);
+                publishProgress(log("连接成功."+ip));
                 InputStream in =new BufferedInputStream(client.getInputStream());
                 OutputStream out =new BufferedOutputStream( client.getOutputStream());
                 connection=new Connection(in,out);
@@ -300,9 +316,17 @@ public class FtActivity extends AppCompatActivity  {
                 }
                 transfer.exitFile(connection);
                 publishProgress(log("共发送"+totalSend+"个文件"));
-                publishProgress(log("退出执行"));
+                publishProgress(log("完成全部文件发送,退出。"));
                 restart=false;
             }  catch (Exception e1) {
+                if(e1 instanceof SocketTimeoutException){
+                    publishProgress(log("连接超时，请检查服务端是否打开;ip地址和端口配置."));
+                    if(timeoutTry++>10){
+                        restart=false;
+                        publishProgress(log("连接超时，10次尝试失败退出."));
+                        return;
+                    }
+                }
                 e1.printStackTrace();
                 publishProgress(log("出现错误："+e1.getMessage()));
                 restart=true;
@@ -310,32 +334,56 @@ public class FtActivity extends AppCompatActivity  {
                 closeAll();
             }
         }
-
+        private int timeoutTry=0;
         public void closeAll(){
             if(connection!=null){
                 connection.close();
+                connection=null;
             }
             if (client != null) {
                 try {
                     client.close();
+                    client=null;
                 } catch (IOException e) {
                     e.printStackTrace();
                     restart=true;
                 }
             }
+            mFileTask = null;
+            invalidateOptionsMenu();
         }
 
         @Override
+        protected void onCancelled() {
+            mFileTask.closeAll();
+            invalidateOptionsMenu();
+
+        }
+        @Override
         protected void onPostExecute(final Boolean success) {
-            mFileTask = null;
+            StringBuilder sb=new StringBuilder();
+            sb.append(last.current);
+            sb.append("/");
+            sb.append(last.total);
+            sb.append("   ");
             if (success) {
                 logUtils.log("成功处理全部文件");
+                sb.append("成功发送全部文件");
             } else {
                 logUtils.log("失败");
+                sb.append("部分文件没有发送");
             }
+            statusLog.setText(sb.toString());
+            if(mFileTask!=null){
+                mFileTask.closeAll();
+            }
+
+            invalidateOptionsMenu();
         }
      private   DecimalFormat df = new DecimalFormat("#.00");
-        protected void onProgressUpdate(FileProgress progress) {
+        @Override
+        protected void onProgressUpdate(FileProgress... ps) {
+            FileProgress   progress=ps[0];
             if(progress.txt!=null){
                 logMessage(progress.txt);
                 progress.txt=null;
@@ -349,33 +397,30 @@ public class FtActivity extends AppCompatActivity  {
                 progressBar.setProgress(progress.current);
                 last.current=progress.current;
             }
-
-            long totalSend = transfer.getTotalByteSend();
-            long curTime=System.currentTimeMillis();
-            double rate = ((double) totalSend - lastSend)/((curTime-lastSendTime)/1000);
-            int  kb=1024;
-            int  mb=1024*1024;
-            String rateTxt="";
-            if(rate>mb){
-                rateTxt= df.format(rate/mb)+"MB/S";
-            }else if(rate>kb){
-                rateTxt= df.format(rate/kb)+"KB/S";
+            if(transfer!=null){
+                long totalSend = transfer.getTotalByteSend();
+                long curTime=System.currentTimeMillis();
+                double rate = ((double) totalSend - lastSend)/((curTime-lastSendTime)/1000);
+                int  kb=1024;
+                int  mb=1024*1024;
+                String rateTxt="";
+                if(rate>mb){
+                    rateTxt= df.format(rate/mb)+"MB/S";
+                }else if(rate>kb){
+                    rateTxt= df.format(rate/kb)+"KB/S";
+                }else{
+                    rateTxt= df.format(rate)+"B/S";
+                }
+                StringBuilder sb=new StringBuilder();
+                sb.append(rateTxt);
+                sb.append("  ");
+                sb.append(last.current);
+                sb.append("/");
+                sb.append(last.total);
+                statusLog.setText(sb.toString());
             }
-            rateTxt= df.format(rate)+"B/S";
-            StringBuilder sb=new StringBuilder();
-            sb.append(rateTxt);
-            sb.append("  ");
-            sb.append(last.current);
-            sb.append("/");
-            sb.append(last.total);
-            statusLog.setText(sb.toString());
         }
 
-        @Override
-        protected void onCancelled() {
-            mFileTask = null;
-
-        }
 
         private long lastSend=0;
         private long lastSendTime=System.currentTimeMillis();
