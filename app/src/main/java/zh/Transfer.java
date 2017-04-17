@@ -16,6 +16,9 @@ import zh.checksum.FileChecksumSha1;
 public class Transfer {
 	private Config config;
 	private LogUtils log;
+
+	private long totalByteSend=0;
+
 	public Transfer(Config config,LogUtils log){
 		this.config=config;
 		this.log=log;
@@ -46,12 +49,14 @@ public class Transfer {
 			FileChecksum cs[]=new FileChecksum[]{new FileChecksumCrc32(),new FileChecksumMd5(),new FileChecksumSha1() };
 			while((readSize = bf.read(buf)) != -1){
 				conn.writeBytes(buf,0,readSize);
+				totalByteSend+=readSize;
 				for(FileChecksum fc:cs){
 					fc.update(buf, 0, readSize);
 				}
 			}
 			for(FileChecksum fc:cs){
-				conn.writeString(fc.digest());;
+				String dgs = fc.digest();
+				conn.writeString(dgs);;
 			}
 			conn.flush();
 			result=conn.readString();
@@ -150,6 +155,13 @@ public class Transfer {
 		}
 		return false;
     }
+
+	public long getTotalByteSend() {
+		return totalByteSend;
+	}
+
+
+
 	private static final String RESULT_SUCCESS="SUCCESS";
 	private static final String RESULT_ERROR="ERROR";
 	private static final String RESULT_EXIT="EXIT_7892_12367XS";

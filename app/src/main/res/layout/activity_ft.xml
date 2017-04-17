@@ -9,8 +9,20 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="zh3.maven.org.myapplication.FtActivity">
-    <!-- Login progress -->
-            <ListView android:id="@+id/logList"
+
+    <TextView
+        android:text=""
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/status_log" />
+
+    <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBar" android:visibility="gone" />
+
+    <ListView android:id="@+id/logList"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 />

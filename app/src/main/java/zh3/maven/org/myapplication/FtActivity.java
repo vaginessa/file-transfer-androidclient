@@ -14,6 +14,8 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedInputStream;
@@ -23,7 +25,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.text.DecimalFormat;
 import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import zh.Config;
 import zh.Connection;
@@ -54,6 +58,8 @@ public class FtActivity extends AppCompatActivity  {
     private ArrayAdapter adapter;
     private File cacheDir;
     private LinkedList logModel;
+    private ProgressBar progressBar;
+    private TextView statusLog;
 
 
     @Override
@@ -123,6 +129,8 @@ public class FtActivity extends AppCompatActivity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ft);
         ListView logList= (ListView) this.findViewById(R.id.logList);
+        progressBar= (ProgressBar) this.findViewById(R.id.progressBar);
+        statusLog= (TextView) this.findViewById(R.id.status_log);
 
 
 
@@ -142,11 +150,18 @@ public class FtActivity extends AppCompatActivity  {
             throw new RuntimeException("读取配置失败"+e.getMessage());
         }
         logUtils=new LogUtils(logFile,adapter,logModel,FtActivity.this);
-
+        logMessage("点击右上角| 开始.");
 
     }
 
-
+    private void logMessage(String progres) {
+        String log=   logUtils.log(progres);
+        if(logModel.size()>200){
+            logModel.removeFirst();
+        }
+        logModel.add(log);
+        adapter.notifyDataSetChanged();
+    }
 
 
 
@@ -176,9 +191,12 @@ public class FtActivity extends AppCompatActivity  {
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
      */
-    public class FileTransferTask extends AsyncTask<Void, String, Boolean> {
-
-
+    public class FileTransferTask extends AsyncTask<Void, FileProgress, Boolean> {
+        private volatile boolean  RUN=true;
+        private volatile  boolean restart=true;
+        private  FileProgress fp=new FileProgress();
+        private  FileProgress last=new FileProgress();
+        private Transfer transfer;
 
         FileTransferTask() {
 
@@ -186,9 +204,15 @@ public class FtActivity extends AppCompatActivity  {
         @Override
         protected void onPreExecute(){
                  adapter.clear();
-
+                 progressBar.setVisibility(View.VISIBLE);
+                 progressBar.setMax(100);
 
         }
+        private FileProgress log(String txt){
+            fp.txt=txt;
+            return fp;
+        }
+
 
         private static final String logFile="logSend.txt";
         @Override
@@ -201,71 +225,104 @@ public class FtActivity extends AppCompatActivity  {
                 config = new Config(sp);
             } catch (IOException e2) {
                 e2.printStackTrace();
-                publishProgress("读取配置失败");
+
+                publishProgress(log("读取配置失败"));
                 return false;
             }
             String srcDir=config.getSrcDir();
             File fileSrc = new File(srcDir);
             if(!fileSrc.exists()){
-                publishProgress(fileSrc.getAbsolutePath()+" 文件目录不存在，请选择要转移的目录！");
+                publishProgress(log(fileSrc.getAbsolutePath()+" 文件目录不存在，请选择要转移的目录！"));
                 return false;
             }
             if(!fileSrc.isDirectory()){
-                publishProgress(fileSrc.getAbsolutePath()+" 不是目录，请选择要转移的目录！");
+                publishProgress(log(fileSrc.getAbsolutePath()+" 不是目录，请选择要转移的目录！"));
                 return false;
             }
-            publishProgress("转移目录 "+fileSrc.getAbsolutePath());
+            while(restart&&RUN){
+                restart=false;
+                publishProgress(log("转移目录 "+fileSrc.getAbsolutePath()));
+                testClient(config);
+                if(restart){
+                    //延迟5秒再试
+                    try {
+                        Thread.sleep(5*1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return true;
+        }
+
+         public void shutdown(){
+             RUN=false;
+             closeAll();
+         }
+
+        Socket client = null;
+        Connection connection=null;
+
+
+
+        private void testClient( Config config){
 
             String ip=config.getIp();
             int port=config.getPort();
-            Socket client = null;
-            Connection connection=null;
+
             try {
                 client = new Socket(ip, port);
                 client.setSoTimeout(15000);
                 InputStream in =new BufferedInputStream(client.getInputStream());
                 OutputStream out =new BufferedOutputStream( client.getOutputStream());
-                 connection=new Connection(in,out);
-                File src=new File(srcDir);
-                Transfer transfer=new Transfer(config,logUtils);
+                connection=new Connection(in,out);
+                File src=new File(config.getSrcDir());
+               transfer=new Transfer(config,logUtils);
                 int totalSend=0;
-                for(File file:src.listFiles()){
+                File[] allFiles = src.listFiles();
+                  fp.total=allFiles.length;
+                  fp.current=0;
+                  publishProgress(fp);
+                for(File file:allFiles){
                     if(!file.isFile()){
-                        publishProgress("skip not  file "+file.getAbsolutePath());
+                        fp.current++;
+                        publishProgress(log("skip not  file "+file.getAbsolutePath()));
                         continue;
                     }
                     FileItem fileItem=new FileItem();
                     fileItem.setName(file.getName());
                     fileItem.setPath(file.getAbsolutePath());
                     fileItem.setSize(file.length());
-                    publishProgress("发送文件 "+file.getName());
+                    fp.current++;
+                    publishProgress(log("发送文件 "+file.getName()));
                     transfer.clientSend(fileItem, connection);
                     totalSend++;
                 }
                 transfer.exitFile(connection);
-                publishProgress("共发送"+totalSend+"个文件");
-                publishProgress("退出执行");
-
-                return true;
+                publishProgress(log("共发送"+totalSend+"个文件"));
+                publishProgress(log("退出执行"));
+                restart=false;
             }  catch (Exception e1) {
                 e1.printStackTrace();
-                publishProgress("出现错误："+e1.getMessage());
+                publishProgress(log("出现错误："+e1.getMessage()));
+                restart=true;
             }  finally {
-                if(connection!=null){
-                    connection.close();
-                }
-                if (client != null) {
-                    try {
-                        client.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-
+                closeAll();
             }
+        }
 
-            return true;
+        public void closeAll(){
+            if(connection!=null){
+                connection.close();
+            }
+            if (client != null) {
+                try {
+                    client.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    restart=true;
+                }
+            }
         }
 
         @Override
@@ -277,8 +334,41 @@ public class FtActivity extends AppCompatActivity  {
                 logUtils.log("失败");
             }
         }
-        protected void onProgressUpdate(String...  progress) {
-            logMessage(progress[0]);
+     private   DecimalFormat df = new DecimalFormat("#.00");
+        protected void onProgressUpdate(FileProgress progress) {
+            if(progress.txt!=null){
+                logMessage(progress.txt);
+                progress.txt=null;
+            }
+            if(last.total!=progress.total){
+                progressBar.setMax(progress.total);
+                last.total=progress.total;
+            }
+
+            if(last.current!=progress.current){
+                progressBar.setProgress(progress.current);
+                last.current=progress.current;
+            }
+
+            long totalSend = transfer.getTotalByteSend();
+            long curTime=System.currentTimeMillis();
+            double rate = ((double) totalSend - lastSend)/((curTime-lastSendTime)/1000);
+            int  kb=1024;
+            int  mb=1024*1024;
+            String rateTxt="";
+            if(rate>mb){
+                rateTxt= df.format(rate/mb)+"MB/S";
+            }else if(rate>kb){
+                rateTxt= df.format(rate/kb)+"KB/S";
+            }
+            rateTxt= df.format(rate)+"B/S";
+            StringBuilder sb=new StringBuilder();
+            sb.append(rateTxt);
+            sb.append("  ");
+            sb.append(last.current);
+            sb.append("/");
+            sb.append(last.total);
+            statusLog.setText(sb.toString());
         }
 
         @Override
@@ -286,15 +376,20 @@ public class FtActivity extends AppCompatActivity  {
             mFileTask = null;
 
         }
+
+        private long lastSend=0;
+        private long lastSendTime=System.currentTimeMillis();
     }
 
-    private void logMessage(String progres) {
-     String log=   logUtils.log(progres);
-        if(logModel.size()>200){
-            logModel.removeFirst();
-        }
-        logModel.add(log);
-        adapter.notifyDataSetChanged();
+
+
+    static class  FileProgress{
+       private volatile String txt;
+       private volatile int total;
+       private volatile int current;
+
+
     }
+
 }
 
