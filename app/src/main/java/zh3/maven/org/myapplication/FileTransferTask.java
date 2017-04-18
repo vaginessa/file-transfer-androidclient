@@ -107,7 +107,7 @@ public class FileTransferTask extends AsyncTask<Void,  FileProgress, Boolean> {
         String ip=config.getIp();
         int port=config.getPort();
         try {
-            publishProgress(log("尝试连接 "+ip+" ......"+timeoutTry));
+            publishProgress(log("尝试连接 "+timeoutTry+"  "+ip+" ......"));
             client = new Socket();
             client.connect(new InetSocketAddress(ip, port), 5*1000);
             client.setSoTimeout(15000);
@@ -162,7 +162,6 @@ public class FileTransferTask extends AsyncTask<Void,  FileProgress, Boolean> {
         RUN=false;
         closeConnection();
         restart=false;
-        ftActivity.CLIENT_RUN=false;
     }
 
     private void closeConnection() {
@@ -184,7 +183,6 @@ public class FileTransferTask extends AsyncTask<Void,  FileProgress, Boolean> {
     @Override
     protected void onCancelled() {
         closeAll();
-        ftActivity.CLIENT_RUN=false;
         ftActivity.invalidateOptionsMenu();
     }
     @Override
@@ -194,10 +192,10 @@ public class FileTransferTask extends AsyncTask<Void,  FileProgress, Boolean> {
         sb.append("/");
         sb.append(last.total);
         sb.append("   ");
-        if (success) {
+        if (success &&last.current>0&&last.current==last.total ) {
             ftActivity.logUtils.log("成功处理全部文件");
             sb.append("成功发送全部文件");
-        } else {
+        } else if(last.current>0&&last.current<last.total){
             ftActivity.logUtils.log("失败");
             sb.append("部分文件没有发送");
         }

@@ -49,7 +49,6 @@ import static android.Manifest.permission.READ_CONTACTS;
 public class FtSetActivity   extends AppCompatActivity{
     private static final String TAG="FtSetActivity";
     private static final int REQUEST_CODE_FILE_EXPLORER_ACTIVITY=204;
-   // public static final String SETTING_FILE= "ft_setting";
     private SettingsFragment sf;
 
     @Override

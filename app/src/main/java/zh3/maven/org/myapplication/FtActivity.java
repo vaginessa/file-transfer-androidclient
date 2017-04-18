@@ -2,8 +2,10 @@ package zh3.maven.org.myapplication;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -14,6 +16,8 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.umeng.analytics.MobclickAgent;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,9 +58,19 @@ public class FtActivity extends AppCompatActivity  {
         getMenuInflater().inflate(R.menu.menu, menu);
         return true;
     }
+    public void onResume() {
+        super.onResume();
+        MobclickAgent.onResume(this);
+    }
+    public void onPause() {
+        super.onPause();
+        MobclickAgent.onPause(this);
+    }
+
+
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        if (CLIENT_RUN) {
+        if (isTaskRun()) {
             menu.findItem(R.id.ft_start).setTitle("停止" );
         }else{
             menu.findItem(R.id.ft_start).setTitle("开始" );
@@ -72,11 +86,9 @@ public class FtActivity extends AppCompatActivity  {
             }
             case R.id.ft_faq: {
                 // Launch the DeviceListActivity to see devices and do scan
-                Intent intent = new Intent();
-                intent.setAction("android.intent.action.VIEW");
-                Uri content_url = Uri.parse("http://101game.esy.es/filetransfer/faq.php");
-                intent.setData(content_url);
-                startActivity(intent);
+                Intent intent = new Intent(this,
+                        HelpActivity.class);
+                startActivityForResult(intent, REQUEST_CODE_FAQ_ACTIVITY);
                 return true;
             }
             case R.id.ft_feedback: {
@@ -93,7 +105,7 @@ public class FtActivity extends AppCompatActivity  {
     }
 
     private void startFileTranfer() {
-        if (CLIENT_RUN) {
+        if (isTaskRun()) {
                 new AlertDialog.Builder(this).setTitle("文件发送中，确定取消发送？")
                         .setIcon(android.R.drawable.ic_dialog_info)
                         .setPositiveButton("确定", new DialogInterface.OnClickListener() {
@@ -103,9 +115,10 @@ public class FtActivity extends AppCompatActivity  {
                                 if(mFileTask!=null){
                                     mFileTask.closeAll();
                                     mFileTask=null;
+                                    invalidateOptionsMenu();
                                 }
-                                startActivityForResult(new Intent(FtActivity.this,
-                                        FtSetActivity.class), REQUEST_CODE_SETTINGS_ACTIVITY);
+                                /*startActivityForResult(new Intent(FtActivity.this,
+                                        FtSetActivity.class), REQUEST_CODE_SETTINGS_ACTIVITY);*/
                             }
                         })
                         .setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -119,6 +132,11 @@ public class FtActivity extends AppCompatActivity  {
                     FtSetActivity.class), REQUEST_CODE_SETTINGS_ACTIVITY);
         }
     }
+
+    private boolean isTaskRun() {
+        return mFileTask!=null&&mFileTask.RUN;
+    }
+
     @Override
     public void onBackPressed(){
         new AlertDialog.Builder(this).setTitle("确认退出吗？")
@@ -150,6 +168,7 @@ public class FtActivity extends AppCompatActivity  {
             }else if(resultCode==RESULT_CANCELED){
                 showTxt("取消");
             }
+            invalidateOptionsMenu();
         }
     }
 
@@ -169,6 +188,9 @@ public class FtActivity extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ft);
+
+
+
         ListView logList= (ListView) this.findViewById(R.id.logList);
         progressBar= (ProgressBar) this.findViewById(R.id.progressBar);
         statusLog= (TextView) this.findViewById(R.id.status_log);
@@ -204,7 +226,6 @@ public class FtActivity extends AppCompatActivity  {
     }
 
 
-  static  volatile  boolean CLIENT_RUN=false;
 
     /**
      * Attempts to sign in or register the account specified by the login form.
@@ -212,11 +233,10 @@ public class FtActivity extends AppCompatActivity  {
      * errors are presented and no actual login attempt is made.
      */
     private void attemptLogin() {
-        if (mFileTask != null&&mFileTask.RUN) {
+        if (isTaskRun()) {
             showTxt("运行中...");
             return;
         }
-        CLIENT_RUN=true;
         boolean cancel = false;
         View focusView = null;
         mFileTask = new FileTransferTask(this);
