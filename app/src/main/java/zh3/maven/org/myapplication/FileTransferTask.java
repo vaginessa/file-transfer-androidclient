@@ -143,7 +143,7 @@ public class FileTransferTask extends AsyncTask<Void,  FileProgress, Boolean> {
             restart=false;
         }  catch (Exception e1) {
             if(e1 instanceof SocketTimeoutException){
-                publishProgress(log("连接超时，请检查服务端是否打开;ip地址和端口配置."));
+                publishProgress(log("连接超时，请检查服务端是否打开;ip地址和端口配置.在同一个局域网内。"));
                 if(timeoutTry++>10){
                     restart=false;
                     publishProgress(log("连接超时，10次尝试失败退出."));
