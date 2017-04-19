@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -223,6 +224,9 @@ public class FtActivity extends AppCompatActivity  {
         }
         logModel.add(log);
         adapter.notifyDataSetChanged();
+
+
+         Log.v("FtActivity",Test.getDeviceInfo(this));
     }
 
 

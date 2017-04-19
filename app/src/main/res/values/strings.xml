@@ -2,17 +2,6 @@
     <string name="app_name">FileTransfer</string>
 
     <!-- Strings related to login -->
-    <string name="prompt_email">Email</string>
-    <string name="prompt_password">Password (optional)</string>
-    <string name="action_sign_in">Sign in or register</string>
-    <string name="action_sign_in_short">Sign in</string>
-    <string name="error_invalid_email">This email address is invalid</string>
-    <string name="error_invalid_password">This password is too short</string>
-    <string name="error_incorrect_password">This password is incorrect</string>
-    <string name="error_field_required">This field is required</string>
-    <string name="permission_rationale">"Contacts permissions are needed for providing email
-        completions."
-    </string>
     <string name="title_activity_main">MainActivity</string>
 
     <string name="ft_start">开始</string>
@@ -28,10 +17,10 @@
     <string name="pref_header_general">设置</string>
     <string name="pref_ft_del_after_success">检验成功后删除源文件</string>
     <string name="pref_ft_del_after_summary">检验成功后目标文件和源文件相同，可安全删除</string>
-    <string name="pref_ft_conn_ip_display_name">远程地址(电脑ip地址，在电脑上查看)</string>
+    <string name="pref_ft_conn_ip_display_name">远程地址(电脑ip地址)</string>
     <string name="pref_ft_conn_ip">192.168.1.101</string>
     <string name="pref_ft_conn_port">20009</string>
-    <string name="pref_ft_conn_port_display_name">远程端口(电脑端口)</string>
+    <string name="pref_ft_conn_port_display_name">远程端口</string>
 
     <string name="pref_ft_src_dir">/</string>
     <string name="pref_ft_src_summary">发送目录</string>
