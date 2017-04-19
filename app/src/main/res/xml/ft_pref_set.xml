@@ -20,7 +20,7 @@
         android:title="@string/pref_ft_del_after_success" />-->
 
     <CheckBoxPreference
-        android:defaultValue="true"
+        android:defaultValue="false"
         android:key="def_success_switch"
         android:summary="@string/pref_ft_del_after_summary"
         android:title="@string/pref_ft_del_after_success" />

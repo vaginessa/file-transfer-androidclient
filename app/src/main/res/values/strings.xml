@@ -27,7 +27,7 @@
     <!-- Example General settings -->
     <string name="pref_header_general">设置</string>
     <string name="pref_ft_del_after_success">检验成功后删除源文件</string>
-    <string name="pref_ft_del_after_summary">检验成功目录文件和源文件相同，可安全删除</string>
+    <string name="pref_ft_del_after_summary">检验成功后目标文件和源文件相同，可安全删除</string>
     <string name="pref_ft_conn_ip_display_name">远程地址(电脑ip地址，在电脑上查看)</string>
     <string name="pref_ft_conn_ip">192.168.1.101</string>
     <string name="pref_ft_conn_port">20009</string>

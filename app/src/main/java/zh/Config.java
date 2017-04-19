@@ -19,7 +19,7 @@ public class Config {
 
 
 	public Config(SharedPreferences sp) throws IOException {
-		delAfterSuccess=sp.getBoolean("def_success_switch",true);
+		delAfterSuccess=sp.getBoolean("def_success_switch",false);
 
 		port=Integer.parseInt(sp.getString("conn_port_text","20009"));
 		ip=sp.getString("conn_ip_text","192.168.0.1");
