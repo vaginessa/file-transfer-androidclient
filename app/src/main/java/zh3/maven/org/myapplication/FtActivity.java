@@ -59,10 +59,12 @@ public class FtActivity extends AppCompatActivity  {
         getMenuInflater().inflate(R.menu.menu, menu);
         return true;
     }
+    @Override
     public void onResume() {
         super.onResume();
         MobclickAgent.onResume(this);
     }
+    @Override
     public void onPause() {
         super.onPause();
         MobclickAgent.onPause(this);
@@ -140,24 +142,28 @@ public class FtActivity extends AppCompatActivity  {
 
     @Override
     public void onBackPressed(){
-        new AlertDialog.Builder(this).setTitle("确认退出吗？")
-                .setIcon(android.R.drawable.ic_dialog_info)
-                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        // 点击“确认”后的操作
-                        if(mFileTask!=null){
-                            mFileTask.closeAll();
-                            mFileTask=null;
+        if (isTaskRun()) {
+            new AlertDialog.Builder(this).setTitle("正在发送，确认退出？")
+                    .setIcon(android.R.drawable.ic_dialog_info)
+                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // 点击“确认”后的操作
+                            if(mFileTask!=null){
+                                mFileTask.closeAll();
+                                mFileTask=null;
+                            }
+                            FtActivity.this.finish();
                         }
-                        FtActivity.this.finish();
-                    }
-                })
-                .setNegativeButton("返回", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                    }
-                }).show();
+                    })
+                    .setNegativeButton("返回", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    }).show();
+        }else{
+            FtActivity.this.finish();
+        }
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -182,6 +188,10 @@ public class FtActivity extends AppCompatActivity  {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if(mFileTask!=null){
+            mFileTask.closeAll();
+            mFileTask=null;
+        }
         logUtils.close();
     }
 
@@ -225,11 +235,49 @@ public class FtActivity extends AppCompatActivity  {
         logModel.add(log);
         adapter.notifyDataSetChanged();
 
+         UpdateThread.start(new UpdateThread.ReulstProcess(){
+             @Override
+             public void on(final UpdateThread.UpItem item) {
+                 if(item.update&&item.url!=null){
+                     String message=item.message;
+                     if(message==null)message="";
+                     FtActivity.this.runOnUiThread(new Runnable() {
+                         @Override
+                         public void run() {
+                             showUpdate("有新版本,是否更新?",item.url);
+                         }
+                     });
 
-         Log.v("FtActivity",Test.getDeviceInfo(this));
+                 }
+             }
+
+
+         });
     }
 
+    private void showUpdate(String tile,final String url) {
+        new AlertDialog.Builder(this).setTitle(tile)
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
 
+                        Intent intent = new Intent();
+                        intent.setAction("android.intent.action.VIEW");
+                        Uri content_url = Uri.parse(url);
+                        intent.setData(content_url);
+                        startActivity(intent);
+
+                        // 点击“确认”后的操作
+
+                    }
+                })
+                .setNegativeButton("返回", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                }).show();
+    }
 
     /**
      * Attempts to sign in or register the account specified by the login form.

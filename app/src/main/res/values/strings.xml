@@ -2,7 +2,6 @@
     <string name="app_name">FileTransfer</string>
 
     <!-- Strings related to login -->
-    <string name="title_activity_main">MainActivity</string>
 
     <string name="ft_start">开始</string>
     <string name="ft_confirm">确认</string>
@@ -23,7 +22,7 @@
     <string name="pref_ft_conn_port_display_name">远程端口</string>
 
     <string name="pref_ft_src_dir">/</string>
-    <string name="pref_ft_src_summary">发送目录</string>
+    <string name="pref_ft_src_summary">转移目录</string>
 
 
 

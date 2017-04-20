@@ -142,7 +142,7 @@ public class FileTransferTask extends AsyncTask<Void,  FileProgress, Boolean> {
             publishProgress(log("完成全部文件发送,退出。"));
             restart=false;
         }  catch (Exception e1) {
-            if(e1 instanceof SocketTimeoutException){
+            if(e1 instanceof SocketTimeoutException|| e1 instanceof java.net.ConnectException){
                 publishProgress(log("连接超时，请检查服务端是否打开;ip地址和端口配置.在同一个局域网内。"));
                 if(timeoutTry++>10){
                     restart=false;
