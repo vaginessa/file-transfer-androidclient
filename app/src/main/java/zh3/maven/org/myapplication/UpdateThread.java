@@ -11,7 +11,7 @@ public class UpdateThread extends Thread{
 	
 	private static volatile long lastUpdateTime=0;
 	private static volatile long oneHour=1000*60*60*1;
-
+	
 	public static synchronized void start(ReulstProcess p){
 		if(new Date().getTime()-lastUpdateTime>oneHour){
 			lastUpdateTime=new Date().getTime();
@@ -43,20 +43,17 @@ public class UpdateThread extends Thread{
 	private static final int version=1;
 	@Override
 	public void run(){
-		try {
 			String request1="http://101game.esy.es/filetransfer/update.php";
 			String request2="http://www.zhangjinwen.win/filetransfer/update.php";
 			String[] urls=new String[]{request1,request2};
 			for(String str:urls){
-				UpItem item = check(str,version);
+				UpItem item = checkNoEx(str,version);
 				if(item!=null){
 					process.on(item);
 					return ;
 				}
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	
 	}
 	
 	
@@ -69,6 +66,15 @@ public class UpdateThread extends Thread{
 	}
 	public interface ReulstProcess{
 		public void on(UpItem item);
+	}
+	
+	public UpItem checkNoEx(String request1,int versionCode){
+		try {
+			return check(request1,versionCode);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	private UpItem check(String request1,int versionCode) throws Exception {
