@@ -6,6 +6,7 @@
             <p> 1.电脑启动服务端<br/>
                 安装jre http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html<br/>
                 选择 Accept License,下载对应系统版本,安装 下一步 完成..<br/>
+                下载<a href ="http://pan.baidu.com/s/1mhXPW9M">ft-server</a> 解压<br/>
                 打开文件 config.txt<br/>
                 #修改接收文件目录<br/>
                 config.destDir=D:\\images\\dst<br/>
