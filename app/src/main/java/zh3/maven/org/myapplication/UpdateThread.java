@@ -11,8 +11,12 @@ public class UpdateThread extends Thread{
 	
 	private static volatile long lastUpdateTime=0;
 	private static volatile long oneHour=1000*60*60*1;
+	private String type;
 	
-	public static synchronized void start(ReulstProcess p){
+	public UpdateThread(String type) {
+		this.type=type;
+	}
+	public static synchronized void start(ReulstProcess p,String type){
 		if(new Date().getTime()-lastUpdateTime>oneHour){
 			lastUpdateTime=new Date().getTime();
 		}else{
@@ -20,13 +24,13 @@ public class UpdateThread extends Thread{
 			return ;
 		}
 		
-		UpdateThread ut=new UpdateThread();
+		UpdateThread ut=new UpdateThread(type);
 		if(p!=null){
 			ut.process= p;
 		}
 		ut.start();
 	}
-	public static synchronized void startConsole() {
+	public static synchronized void startConsole(String type) {
 		start(new ReulstProcess(){
 			@Override
 			public void on(UpItem item) {
@@ -37,7 +41,7 @@ public class UpdateThread extends Thread{
 					 System.out.println(item.url);
 				 }
 			}
-		});
+		},type);
 	}
 	private volatile ReulstProcess process=null;
 	private static final int version=1;
@@ -72,7 +76,7 @@ public class UpdateThread extends Thread{
 		try {
 			return check(request1,versionCode);
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			return null;
 		}
 	}
@@ -80,7 +84,7 @@ public class UpdateThread extends Thread{
 	private UpItem check(String request1,int versionCode) throws Exception {
 		String charset="UTF-8";
 		String value = URLEncoder.encode(String.valueOf(versionCode),charset);
-		String path = request1+"?version="+value;
+		String path = request1+"?version="+value+"&type="+type;
 		URL url = new URL(path);//此处的URL需要进行URL编码；
 		 HttpURLConnection urlConnection = null;
 		 BufferedReader in =null;

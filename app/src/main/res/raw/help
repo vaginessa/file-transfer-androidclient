@@ -1,10 +1,28 @@
 <html>
 <body>
-<p><b>步骤 ：</b><br/>
-    1.打开服务端,<a href="http://101game.esy.es/filetransfer/server.php">下载</a><br/>
-    2.手机点击开始， 设置转移目录 、服务端ip 和端口<br/>
-    <br/>
-    543455595@qq.com<br/>
-    <br/></p>
+  <div class="row marketing">
+        <div class="col-lg-12">
+            <h4>步骤 手机->电脑</h4>
+            <p> 1.电脑启动服务端<br/>
+                安装jre http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html<br/>
+                选择 Accept License,下载对应系统版本,安装 下一步 完成..<br/>
+                打开文件 config.txt<br/>
+                #修改接收文件目录<br/>
+                config.destDir=D:\\images\\dst<br/>
+                上面配置表示接收文件存放到D盘 images dst 目录下（\需要两个\\）<br/>
+                #服务端监听端口,客户端连接端口<br/>
+                config.port=20009<br/>
+                双击start.cmd<br/>
+            </p>
+            <p> 2.手机端<br/>
+                点击开始<br/>
+                设置要转移目录<br/>
+                服务端ip 端口，转移成功后删除源文件。确认<br/>
+            </p>
+             <p>网络连接失败<br/>
+                543455595@qq.com<br/>
+            </p>
+        </div>
+    </div>
 </body>
 </html>

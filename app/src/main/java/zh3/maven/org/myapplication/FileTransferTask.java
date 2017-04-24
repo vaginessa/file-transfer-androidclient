@@ -151,7 +151,7 @@ public class FileTransferTask extends AsyncTask<Void,  FileProgress, Boolean> {
                 }
             }
             e1.printStackTrace();
-            publishProgress(log("出现错误："+e1.getMessage()));
+            publishProgress(log("错误："+e1.getMessage()));
             restart=true;
         }  finally {
             closeConnection();

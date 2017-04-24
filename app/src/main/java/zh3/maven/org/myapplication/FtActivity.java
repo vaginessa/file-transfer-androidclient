@@ -252,7 +252,7 @@ public class FtActivity extends AppCompatActivity  {
              }
 
 
-         });
+         },"android");
     }
 
     private void showUpdate(String tile,final String url) {
